@@ -1,17 +1,21 @@
-pub mod proto {
-    pub mod stack {
-        include!(concat!(env!("OUT_DIR"), "/wcstack.proto.stack.rs"));
-    }
-}
+use wcstack::{
+    proto::stack::{JjState, JjStateStack},
+    store::Store,
+};
 
-use proto::stack::{JjState, JjStateStack};
-
-fn main() {
+fn main() -> Result<(), std::io::Error> {
     let stack = JjStateStack {
         stack: vec![JjState {
             change_id: vec![0u8, 1u8, 2u8],
             is_new: false,
         }],
     };
-    println!("{:?}", stack.stack)
+
+    let store = Store::new_in_current_workspace()?;
+    store.save(&stack)?;
+
+    let loaded_stack = store.load()?;
+    assert_eq!(stack, loaded_stack);
+
+    Ok(())
 }

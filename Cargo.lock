@@ -312,6 +312,7 @@ dependencies = [
  "hex",
  "prost",
  "prost-build",
+ "tempfile",
 ]
 
 [[package]]
