@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package wcstack.proto.stack;
+
+message ChangeIdStack {
+  repeated bytes change_ids = 1;
+}
