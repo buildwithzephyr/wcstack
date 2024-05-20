@@ -24,6 +24,8 @@ pub mod proto {
 }
 
 pub mod change_id;
+pub mod commands;
+pub mod errors;
 pub mod jj_util;
 pub mod stack;
 pub mod store;

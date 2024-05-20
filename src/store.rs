@@ -27,8 +27,12 @@ impl Store {
         let mut filepath = get_workspace_root()?;
         filepath.push(".jj");
         filepath.push("wc_stack");
-        Ok(Self {
+        let result = Self {
             stack_filepath: filepath,
-        })
+        };
+        if !result.stack_filepath.try_exists()? {
+            result.save(&WcStack::empty())?
+        }
+        Ok(result)
     }
 }

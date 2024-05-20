@@ -1,6 +1,6 @@
-use std::fmt::Display;
-
+use crate::errors::WcStackError;
 use reverse_hex::{to_forward_hex, to_reverse_hex};
+use std::fmt::Display;
 
 /// Map between standard hex digits and the "reverse" hex digits used by Jujutsu's ChangeIDs
 /// [Jujutsu docs](https://martinvonz.github.io/jj/v0.14.0/glossary/#change-id)
@@ -73,21 +73,8 @@ mod reverse_hex {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ChangeId(pub Vec<u8>);
-
-#[derive(Debug)]
-pub enum WcStackError {
-    BadChangeId(String),
-}
-
-impl Display for WcStackError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            WcStackError::BadChangeId(s) => write!(f, "Invalid change ID: {}", s),
-        }
-    }
-}
 
 impl TryFrom<&str> for ChangeId {
     type Error = WcStackError;

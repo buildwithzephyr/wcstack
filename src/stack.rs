@@ -25,3 +25,25 @@ impl From<&crate::proto::stack::JjStateStack> for WcStack {
         Self(value.stack.iter().map(|state| state.into()).collect())
     }
 }
+
+impl WcStack {
+    pub fn push(&mut self, new_state: JjState) {
+        self.0.push_front(new_state);
+    }
+
+    pub fn pop(&mut self) -> Option<JjState> {
+        self.0.pop_front()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &JjState> {
+        self.0.iter()
+    }
+
+    pub fn empty() -> Self {
+        Self(VecDeque::new())
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}

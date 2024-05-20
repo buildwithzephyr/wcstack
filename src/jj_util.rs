@@ -1,7 +1,5 @@
 use std::{ffi::OsString, os::unix::ffi::OsStringExt, path::PathBuf, process::Command};
 
-use crate::change_id;
-
 /// Get Command output, stripping trailing newlines
 fn trimmed_stdout(mut cmd: Command) -> Result<String, std::io::Error> {
     let output = cmd.output()?;
@@ -115,9 +113,19 @@ pub fn new_from_change(change_id: String) -> Result<(), std::io::Error> {
     if output.status.success() {
         Ok(())
     } else {
+        eprintln!("{}", OsString::from_vec(output.stderr).to_string_lossy());
         Err(std::io::Error::new(
             std::io::ErrorKind::Other,
             "'jj new' terminated with non-zero exit code",
         ))
     }
+}
+
+pub fn get_jj_status() -> Result<String, std::io::Error> {
+    let mut cmd = Command::new("jj");
+    cmd.arg("status");
+    let output = cmd.output()?;
+    Ok(OsString::from_vec(output.stdout)
+        .to_string_lossy()
+        .to_string())
 }
