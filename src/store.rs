@@ -1,4 +1,4 @@
-use crate::proto::stack::JjStateStack;
+use crate::{proto::stack::JjStateStack, stack::WcStack};
 use prost::Message;
 use std::{
     ffi::OsString, fs, io::Write, os::unix::ffi::OsStringExt, path::PathBuf, process::Command,
@@ -10,17 +10,19 @@ pub struct Store {
 }
 
 impl Store {
-    pub fn save(&self, stack: &JjStateStack) -> Result<(), std::io::Error> {
+    pub fn save(&self, stack: &WcStack) -> Result<(), std::io::Error> {
         let temp_file = NamedTempFile::new()?;
-        temp_file.as_file().write(&stack.encode_to_vec())?;
+        let protobuf_stack: JjStateStack = stack.into();
+        temp_file.as_file().write(&protobuf_stack.encode_to_vec())?;
         temp_file.persist(self.stack_filepath.clone())?;
         Ok(())
     }
 
-    pub fn load(&self) -> Result<JjStateStack, std::io::Error> {
+    pub fn load(&self) -> Result<WcStack, std::io::Error> {
         let buf = fs::read(&self.stack_filepath)?;
-        JjStateStack::decode(&*buf)
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err))
+        let protobuf_stack = &JjStateStack::decode(&*buf)
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err))?;
+        Ok(protobuf_stack.into())
     }
 
     pub fn new_in_current_workspace() -> Result<Self, std::io::Error> {

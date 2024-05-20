@@ -73,7 +73,8 @@ mod reverse_hex {
     }
 }
 
-pub struct ChangeId(Vec<u8>);
+#[derive(Debug, PartialEq)]
+pub struct ChangeId(pub Vec<u8>);
 
 #[derive(Debug)]
 pub enum WcStackError {
