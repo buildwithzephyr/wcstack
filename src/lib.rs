@@ -24,5 +24,6 @@ pub mod proto {
 }
 
 pub mod change_id;
+pub mod jj_util;
 pub mod stack;
 pub mod store;

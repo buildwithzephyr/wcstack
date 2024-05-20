@@ -1,8 +1,6 @@
-use crate::{proto::stack::JjStateStack, stack::WcStack};
+use crate::{jj_util::get_workspace_root, proto::stack::JjStateStack, stack::WcStack};
 use prost::Message;
-use std::{
-    ffi::OsString, fs, io::Write, os::unix::ffi::OsStringExt, path::PathBuf, process::Command,
-};
+use std::{fs, io::Write, path::PathBuf};
 use tempfile::NamedTempFile;
 
 pub struct Store {
@@ -26,12 +24,7 @@ impl Store {
     }
 
     pub fn new_in_current_workspace() -> Result<Self, std::io::Error> {
-        let output = Command::new("jj").args(["workspace", "root"]).output()?;
-        let workspace_root: String = OsString::from_vec(output.stdout)
-            .to_string_lossy()
-            .trim_end_matches('\n')
-            .to_owned();
-        let mut filepath: PathBuf = PathBuf::from(workspace_root);
+        let mut filepath = get_workspace_root()?;
         filepath.push(".jj");
         filepath.push("wc_stack");
         Ok(Self {
