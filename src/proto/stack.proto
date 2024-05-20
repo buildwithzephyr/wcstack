@@ -2,6 +2,11 @@ syntax = "proto3";
 
 package wcstack.proto.stack;
 
-message ChangeIdStack {
-  repeated bytes change_ids = 1;
+message JjState {
+  bytes change_id = 1;
+  bool is_new = 2;
+}
+
+message JjStateStack {
+  repeated JjState stack = 1;
 }
