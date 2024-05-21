@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::change_id::ChangeId;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct JjState {
     pub change_id: ChangeId,
     pub is_new: bool,

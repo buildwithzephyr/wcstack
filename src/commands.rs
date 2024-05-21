@@ -16,6 +16,16 @@ pub enum Commands {
     Push,
     List,
     Pop,
+    Drop,
+}
+
+fn display_state(state: &JjState) -> String {
+    // TODO Call JJ and print some change information
+    format!(
+        "{}{}",
+        state.change_id,
+        if state.is_new { "+ (new)" } else { "  (edit)" }
+    )
 }
 
 impl Commands {
@@ -33,28 +43,14 @@ impl Commands {
                     is_new: discardable,
                 };
                 let mut stack = store.load()?;
-                stack.push(state);
+                stack.push(state.clone());
                 store.save(&stack)?;
-                if discardable {
-                    println!("Saved working copy: (new after) {}", change_id)
-                } else {
-                    println!("Saved working copy: {}", change_id)
-                };
+                println!("Saved working copy: {}", display_state(&state));
                 Ok(())
             }
             Self::List => {
                 let stack = store.load()?;
-                let log: Vec<String> = stack
-                    .iter()
-                    .map(|state| {
-                        // TODO Call JJ and print some change information
-                        format!(
-                            "{}{}",
-                            state.change_id,
-                            if state.is_new { "+ (new)" } else { "  (edit)" }
-                        )
-                    })
-                    .collect();
+                let log: Vec<String> = stack.iter().map(display_state).collect();
                 if log.len() > 0 {
                     println!("{}", log.join("\n"));
                 } else {
@@ -72,12 +68,24 @@ impl Commands {
                         edit_change(state.change_id.to_string())?
                     };
                     store.save(&stack)?;
-                    println!("{}", "State restored, new jj st:");
+                    println!("{}", "State restored, new jj status:");
                     println!("{}", get_jj_status()?);
 
                     Ok(())
                 } else {
                     println!("{}", "Nothing to pop; stack is empty");
+                    Ok(())
+                }
+            }
+            Self::Drop => {
+                let mut stack = store.load()?;
+                let maybe_state = stack.pop();
+                if let Some(state) = maybe_state {
+                    store.save(&stack)?;
+                    println!("Dropped state: {}", display_state(&state));
+                    Ok(())
+                } else {
+                    println!("{}", "Nothing to drop; stack is empty");
                     Ok(())
                 }
             }
