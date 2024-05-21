@@ -13,10 +13,17 @@ use crate::{
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Push the current working copy to the top of the stack
     Push,
+    /// List the working copy stack
     List,
+    /// Pop and restore working copy from the top of the stack
     Pop,
-    Drop,
+    /// Drop a working copy from the stack. Defaults to the top one, or supply a change_id prefix.
+    Drop {
+        /// (Unique) prefix of a change id to drop from the stack. See `wcstack list`.
+        change_id_prefix: Option<String>,
+    },
 }
 
 fn display_state(state: &JjState) -> String {
@@ -77,22 +84,43 @@ impl Commands {
                     Ok(())
                 }
             }
-            Self::Drop => {
+            Self::Drop { change_id_prefix } => {
                 let mut stack = store.load()?;
-                let maybe_state = stack.pop();
-                if let Some(state) = maybe_state {
-                    store.save(&stack)?;
-                    println!("Dropped state: {}", display_state(&state));
-                    Ok(())
+                if let Some(prefix) = change_id_prefix {
+                    let matches: Vec<_> = stack
+                        .0
+                        .iter()
+                        .enumerate()
+                        .map(|(i, state)| (i, state.clone(), state.change_id.to_string()))
+                        .filter(|(_i, _state, id)| id.starts_with(prefix))
+                        .collect();
+                    if matches.len() == 0 {
+                        Err(WcStackError::NoSuchChangeId(prefix.to_owned()))
+                    } else if matches.len() > 1 {
+                        Err(WcStackError::AmbiguousPrefix(prefix.to_owned()))
+                    } else {
+                        stack.0.remove(matches[0].0);
+                        store.save(&stack)?;
+                        println!("Dropped state: {}", display_state(&matches[0].1));
+                        Ok(())
+                    }
                 } else {
-                    println!("{}", "Nothing to drop; stack is empty");
-                    Ok(())
+                    let maybe_state = stack.pop();
+                    if let Some(state) = maybe_state {
+                        store.save(&stack)?;
+                        println!("Dropped state: {}", display_state(&state));
+                        Ok(())
+                    } else {
+                        println!("{}", "Nothing to drop; stack is empty");
+                        Ok(())
+                    }
                 }
             }
         }
     }
 }
 
+/// A tool to rapidly switch and restore Jujutsu working copy using a stack
 #[derive(Parser)]
 pub struct Cli {
     #[command(subcommand)]
