@@ -7,7 +7,7 @@ use crate::{
         edit_change, get_current_change_id, get_is_discardable, get_jj_status,
         get_parent_change_id, new_from_change,
     },
-    stack::JjState,
+    stack::{JjState, WcStack},
     store::Store,
 };
 
@@ -24,6 +24,8 @@ pub enum Commands {
         /// (Unique) prefix of a change id to drop from the stack. See `wcstack list`.
         change_id_prefix: Option<String>,
     },
+    /// Empty the working copy stack
+    Clear,
 }
 
 fn display_state(state: &JjState) -> String {
@@ -115,6 +117,12 @@ impl Commands {
                         Ok(())
                     }
                 }
+            }
+            Self::Clear => {
+                let stack = WcStack::empty();
+                store.save(&stack)?;
+                println!("Stack cleared");
+                Ok(())
             }
         }
     }
